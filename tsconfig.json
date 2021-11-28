@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata" : true,
+        "outDir": "./public/js/",
+        "noImplicitAny": true,
+        "module": "es6",
+        "target": "es6",
+        "jsx": "react",
+        "allowJs": true,
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "moduleResolution": "node"
+    },
+}
