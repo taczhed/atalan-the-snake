@@ -2,7 +2,7 @@ class Area {
     public x: number
     public y: number
     public type: string
-    public body = document.createElement("div")
+    public body = document.createElement('img')
 
     constructor (x: number, y: number, type: string) {
         this.x = x
@@ -12,19 +12,18 @@ class Area {
     }
 
     setBodyDefaultVariables = (): void => {
-        this.body.classList.add('area')
+        this.body.style.position = 'absolute'
+        this.body.style.display = 'block'
         this.body.style.left = `${this.x}px`
         this.body.style.top = `${this.y}px`
 
-        const img = document.createElement('img')
+        if (this.type === 'wall') this.body.setAttribute('src','../../assets/textures/wall.png')
+        else if (this.type === 'head') this.body.setAttribute('src','../../assets/textures/head.png')
+        else if (this.type === 'body') this.body.setAttribute('src','../../assets/textures/body.png')
+        else if (this.type === 'circle') this.body.setAttribute('src','../../assets/textures/circle.png')
+        else if (this.type === 'ass') this.body.setAttribute('src','../../assets/textures/ass.png')
 
-        if (this.type === 'wall') img.setAttribute('src','../../assets/textures/wall.png')
-        else if (this.type === 'head') img.setAttribute('src','../../assets/textures/head.png')
-        else if (this.type === 'body') img.setAttribute('src','../../assets/textures/body.png')
-        else if (this.type === 'ass') img.setAttribute('src','../../assets/textures/ass.png')
-
-        this.body.appendChild(img)
-        img.classList.add('element')
+        this.body.classList.add('area')
     }
 }
 
