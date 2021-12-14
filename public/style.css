@@ -4,14 +4,17 @@ body {
   width: 100%;
   height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background-color: #3a0e00;
+  font-family: "Press Start 2P";
+  color: #bf905e;
 }
 body div#app {
   width: 720px;
   height: 440px;
-  background-color: #002a00;
+  background-color: #012f00;
   position: relative;
 }
 body div#app div.area {

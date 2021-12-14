@@ -19,8 +19,20 @@ let snakeTimeOut: NodeJS.Timeout
 let snakeBody: Array<Snake> = []
 let pressAccess = true
 const gameMap = document.getElementById('app')
+let music: HTMLAudioElement
 
 const app = {
+    audio: async () => {
+        music = new Audio('../assets/sounds/background_song.mp4')
+        music.loop = true
+    },
+    startTheGame: () => {
+        gameMap.innerHTML = ''
+        music.src = '../assets/sounds/background.mp4'
+        app.renderMapOfTheGame()
+        app.renderSnake()
+        app.renderPoint()
+    },
     renderMapOfTheGame: () => {
         let y = 0
         gameMapScheme.forEach((gameRow, yIndex) => {
@@ -141,7 +153,8 @@ const app = {
     endGame: () => {
         clearTimeout(snakeTimeOut)
         clearInterval(snakeInterval)
-        // alert('You lose!')
+        music.pause()
+        alert('You lose!')
     },
     renderPoint: () => {
         let loop = true
@@ -182,6 +195,10 @@ const app = {
     }
 }
 
-app.renderMapOfTheGame()
-app.renderSnake()
-app.renderPoint()
+app.audio()
+
+//keys
+document.addEventListener('keydown', e => {
+    if (e.keyCode === 16) app.startTheGame()
+    if (e.keyCode === 83) music.play()
+})
