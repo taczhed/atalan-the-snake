@@ -9,8 +9,8 @@ body {
   background-color: #3a0e00;
 }
 body div#app {
-  width: 1040px;
-  height: 480px;
+  width: 720px;
+  height: 440px;
   background-color: #002a00;
   position: relative;
 }
