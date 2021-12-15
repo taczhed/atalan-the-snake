@@ -1,7 +1,10 @@
 // 36x22 map size
 import Area from './modules/Area'
 import Snake from './modules/Snake'
-import defaultMap from "../assets/maps/default.json"
+import map1 from "../assets/maps/map1.json"
+import map2 from "../assets/maps/map2.json"
+import map3 from "../assets/maps/map3.json"
+import map4 from "../assets/maps/map4.json"
 import Point from "./modules/Point";
 
 //variables
@@ -12,23 +15,60 @@ const mapHeight = 22
 let points = 0
 let snakeCords = [8, 10] //y, x
 let currentDestiantion = 'bottom'
-let gameMapScheme = defaultMap.gameMap
+const gameMaps = [map1.gameMap, map2.gameMap, map3.gameMap, map4.gameMap]
+let gameMapScheme = gameMaps[0]
 let arrayOfMapAreas: Array<Array< Area | Point | number >> = gameMapScheme
 let snakeInterval: NodeJS.Timer
 let snakeTimeOut: NodeJS.Timeout
 let snakeBody: Array<Snake> = []
 let pressAccess = true
+let isLevelSelected = false
 const gameMap = document.getElementById('app')
-let music: HTMLAudioElement
+let selectedGameMapNumber = 0
+
+let backgroundMusicPermission = false
+let isSoundEnabled = false
+let backgroundMusic: HTMLAudioElement
+let pointCollectingSound: HTMLAudioElement
 
 const app = {
+    startMapsChoosingMenu: () => {
+        isLevelSelected = true
+        gameMap.innerHTML = '<video width="721" height="440" playsinline autoplay muted loop><source src="../assets/video/choose_menu.mp4" type="video/mp4">Your browser does not support the video tag.</video><div id="game-maps"></div>'
+        //display levels
+        const gameMapsContainer = document.getElementById('game-maps')
+        for (let mapIndex = 1; mapIndex <= 4; mapIndex++) {
+            const img = document.createElement('div')
+            img.classList.add('game-maps-item')
+            img.style.backgroundImage = 'url("'+`../assets/textures/map_${mapIndex}.png`+'")'
+            gameMapsContainer.appendChild(img)
+        }
+        gameMap.appendChild(gameMapsContainer)
+        const gameMapsPicker = document.createElement('div')
+        const imgsDOM = document.querySelectorAll('.game-maps-item')
+        gameMapsPicker.classList.add('game-maps-picker')
+        imgsDOM[selectedGameMapNumber].appendChild(gameMapsPicker)
+
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 39) {
+                if (selectedGameMapNumber < 3) selectedGameMapNumber += 1
+            } else if (e.keyCode === 37) {
+                if (selectedGameMapNumber > 0) selectedGameMapNumber -= 1
+            }
+            imgsDOM[selectedGameMapNumber].appendChild(gameMapsPicker)
+        })
+    },
     audio: async () => {
-        music = new Audio('../assets/sounds/background_song.mp4')
-        music.loop = true
+        backgroundMusic = new Audio('../assets/sounds/background_song.mp4')
+        pointCollectingSound = new Audio('../assets/sounds/point.mp4')
+        backgroundMusic.loop = true
     },
     startTheGame: () => {
+        gameMapScheme = gameMaps[selectedGameMapNumber]
+        arrayOfMapAreas = gameMapScheme
         gameMap.innerHTML = ''
-        music.src = '../assets/sounds/background.mp4'
+        backgroundMusic.src = '../assets/sounds/background.mp4'
+        backgroundMusic.play()
         app.renderMapOfTheGame()
         app.renderSnake()
         app.renderPoint()
@@ -153,7 +193,7 @@ const app = {
     endGame: () => {
         clearTimeout(snakeTimeOut)
         clearInterval(snakeInterval)
-        music.pause()
+        backgroundMusic.pause()
         alert('You lose!')
     },
     renderPoint: () => {
@@ -174,6 +214,7 @@ const app = {
         }
     },
     collectPoint: (y: number, x: number, direction: string) => {
+        pointCollectingSound.play()
         points += 1
         console.log(points)
         arrayOfMapAreas[y][x] = 0
@@ -199,6 +240,20 @@ app.audio()
 
 //keys
 document.addEventListener('keydown', e => {
-    if (e.keyCode === 16) app.startTheGame()
-    if (e.keyCode === 83) music.play()
+    if (e.keyCode === 16) {
+        if (isLevelSelected) app.startTheGame()
+        else app.startMapsChoosingMenu()
+    }
+    if (e.keyCode === 83) {
+        if (!backgroundMusicPermission) backgroundMusic.play(), backgroundMusicPermission = true
+        else if (isSoundEnabled) {
+            isSoundEnabled = false
+            pointCollectingSound.muted = false
+            backgroundMusic.muted = false
+        } else {
+            isSoundEnabled = true
+            pointCollectingSound.muted = true
+            backgroundMusic.muted = true
+        }
+    }
 })
