@@ -1,4 +1,3 @@
-// 36x22 map size
 import Area from './modules/Area'
 import Snake from './modules/Snake'
 import map1 from "../assets/maps/map1.json"
@@ -7,35 +6,114 @@ import map3 from "../assets/maps/map3.json"
 import map4 from "../assets/maps/map4.json"
 import Point from "./modules/Point";
 
-//variables
+// const global variables
 const snakeSize = 8
 const areaSize = 20
 const mapWidth = 36
 const mapHeight = 22
-let points = 0
-let snakeCords = [8, 10] //y, x
-let currentDestiantion = 'bottom'
+const lengthOfSnakeInterval = 250
 const gameMaps = [map1.gameMap, map2.gameMap, map3.gameMap, map4.gameMap]
+
+// let global variables
+let points = 0
+let snakeCords = [8, 10] //y, xc
+let currentDestiantion = 'bottom'
 let gameMapScheme = gameMaps[0]
 let arrayOfMapAreas: Array<Array< Area | Point | number >> = gameMapScheme
-let snakeInterval: NodeJS.Timer
-let snakeTimeOut: NodeJS.Timeout
 let snakeBody: Array<Snake> = []
-let pressAccess = true
-let isLevelSelected = false
-const gameMap = document.getElementById('app')
-let selectedGameMapNumber = 0
 
-let backgroundMusicPermission = false
-let isSoundEnabled = false
+// nodes
+const gameMap = document.getElementById('app')
+const informationParagraph = document.querySelector('.information-text')
+
+// counters
+let selectedGameMapNumber = 0
+let colorSchemeCounter = 0
+let decisionsStep = 1
+
+// access
+let canSpawnExtraPoint = true
+let pressAccess = true
+
+// sound variables
 let backgroundMusic: HTMLAudioElement
 let pointCollectingSound: HTMLAudioElement
+let endSound: HTMLAudioElement
+let backgroundMusicPermission = false
+let isSoundEnabled = false
+
+// timers, intervals
+let snakeInterval: NodeJS.Timer
+let snakeTimeOut: NodeJS.Timeout
+let extraPointInterval: NodeJS.Timer
+let informationIntreval: NodeJS.Timer
 
 const app = {
+    onLoad: () => {
+        app.runInformationTextLoop()
+        app.setGlobalHotKeys()
+        app.fetchAudio()
+    },
+    fetchAudio: async () => {
+        backgroundMusic = new Audio('../assets/sounds/background_song.mp4')
+        pointCollectingSound = new Audio('../assets/sounds/point.mp4')
+        endSound = new Audio('../assets/sounds/end.mp4')
+        backgroundMusic.loop = true
+    },
+    runInformationTextLoop: () => {
+        const information = [
+            '~~~ PRESS [SHIFT] TO START ~~~',
+            '~~~ PRESS [S] TO TURN ON/OFF THE MUSIC ~~~',
+            '~~~ PRESS [C] TO CHANGE THE COLOR ~~~',
+            '~~~ USE ARROWS FOR STEERING ~~~',
+            '~~~ SNAKE GAME IMPLEMENTED IN *TYPESCRIPT* ~~~',
+            '~~~ AUTHOR: JAKUB "JKR" KRZAK, PORTED BY TACZHED ~~~',
+            '~~~ MUSIC BY: PIOTR "PAPTAK" NOWICKI ~~~',
+            '~~~ GREETINGS FOR 8-BIT ATARI ENTHUSIASTS ~~~',
+        ]
+        let informationCounter = 1
+        informationIntreval = setInterval(() => {
+            informationParagraph.innerHTML = information[informationCounter]
+            if (informationCounter === information.length - 1) informationCounter = 0
+            else informationCounter++
+        }, 5000)
+    },
+    startTheGame: () => {
+        decisionsStep = 3
+        gameMapScheme = gameMaps[selectedGameMapNumber]
+        arrayOfMapAreas = gameMapScheme
+        gameMap.innerHTML = ''
+        backgroundMusic.src = '../assets/sounds/background.mp4'
+        backgroundMusic.play()
+        app.renderMapOfTheGame()
+        app.renderSnake()
+        app.renderPoint('point')
+        app.extraPointsSpawning()
+        app.setScoreOnBottomBar()
+    },
+    setScoreOnBottomBar: () => {
+        clearInterval(informationIntreval)
+        informationParagraph.innerHTML = 'SCORE: <span id="points-number">0</span>'
+        informationParagraph.classList.remove('information-text')
+    },
+    renderMapOfTheGame: () => {
+        let y = 0
+        gameMapScheme.forEach((gameRow, yIndex) => {
+            let x = 0
+            gameRow.forEach((gameAreaType, xIndex) => {
+                if (gameAreaType === 1) {
+                    const area = new Area(x, y, 'wall')
+                    gameMap.appendChild(area.body)
+                    arrayOfMapAreas[yIndex][xIndex] = area
+                }
+                x += areaSize
+            })
+            y += areaSize
+        })
+    },
     startMapsChoosingMenu: () => {
-        isLevelSelected = true
+        decisionsStep = 2
         gameMap.innerHTML = '<video width="721" height="440" playsinline autoplay muted loop><source src="../assets/video/choose_menu.mp4" type="video/mp4">Your browser does not support the video tag.</video><div id="game-maps"></div>'
-        //display levels
         const gameMapsContainer = document.getElementById('game-maps')
         for (let mapIndex = 1; mapIndex <= 4; mapIndex++) {
             const img = document.createElement('div')
@@ -58,128 +136,95 @@ const app = {
             imgsDOM[selectedGameMapNumber].appendChild(gameMapsPicker)
         })
     },
-    audio: async () => {
-        backgroundMusic = new Audio('../assets/sounds/background_song.mp4')
-        pointCollectingSound = new Audio('../assets/sounds/point.mp4')
-        backgroundMusic.loop = true
-    },
-    startTheGame: () => {
-        gameMapScheme = gameMaps[selectedGameMapNumber]
-        arrayOfMapAreas = gameMapScheme
-        gameMap.innerHTML = ''
-        backgroundMusic.src = '../assets/sounds/background.mp4'
-        backgroundMusic.play()
-        app.renderMapOfTheGame()
-        app.renderSnake()
-        app.renderPoint('point')
-        app.randomExtraPointsSpawning()
-    },
-    randomExtraPointsSpawning: () => {
-        setTimeout(() => {
-            setInterval(() => {
-                app.renderPoint('extra_point')
-                console.log("spawn!")
-            }, 1000 * 30)
-        },  Math.floor(Math.random() * 11) * 1000)
-    },
-    renderMapOfTheGame: () => {
-        let y = 0
-        gameMapScheme.forEach((gameRow, yIndex) => {
-            let x = 0
-            gameRow.forEach((gameAreaType, xIndex) => {
-                if (gameAreaType === 1) {
-                    const area = new Area(x, y, 'wall')
-                    gameMap.appendChild(area.body)
-                    arrayOfMapAreas[yIndex][xIndex] = area
-                }
-                x += areaSize
-            })
-            y += areaSize
-        })
-    },
     setSnakeInterval: (): void => {
+        // main rules of the game
         snakeTimeOut = setTimeout(() => (
             snakeInterval = setInterval(() => {
-                    if (currentDestiantion === 'top') {
-                        snakeBody[0].rotateHead('top')
-                        if (app.isBodyHittedByHead('top')) app.endGame()
-                        else if (!gameMapScheme[snakeCords[0] - 1]) {
-                            //wall chasing
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeSetPosition('y', (mapHeight - 1) * areaSize)
-                            app.MatchTextures()
-                            snakeCords[0] = mapHeight - 1
-                        }
-                        else if (typeof gameMapScheme[snakeCords[0] - 1][snakeCords[1]] === 'number') {
-                            if (arrayOfMapAreas[snakeCords[0] - 1][snakeCords[1]] === 1) app.collectPoint(snakeCords[0] - 1, snakeCords[1], 'top')
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeMove('y', -areaSize)
-                            app.MatchTextures()
-                            snakeCords[0] -= 1
-                        } else {
-                            app.endGame()
-                        }
-                    } else if (currentDestiantion === 'bottom') {
-                        snakeBody[0].rotateHead('bottom')
-                        if (app.isBodyHittedByHead('bottom')) app.endGame()
-                        else if (!gameMapScheme[snakeCords[0] + 1]) {
-                            //wall chasing
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeSetPosition('y', 0)
-                            app.MatchTextures()
-                            snakeCords[0] = 0
-                        }
-                        else if (typeof gameMapScheme[snakeCords[0] + 1][snakeCords[1]] === 'number') {
-                            if (arrayOfMapAreas[snakeCords[0] + 1][snakeCords[1]]) app.collectPoint(snakeCords[0] + 1, snakeCords[1], 'bottom')
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeMove('y', areaSize)
-                            app.MatchTextures()
-                            snakeCords[0] += 1
-                        } else {
-                            app.endGame()
-                        }
-                    } else if (currentDestiantion === 'left') {
-                        snakeBody[0].rotateHead('left')
-                        if (gameMapScheme[snakeCords[0]][snakeCords[1] - 1] === undefined) {
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeSetPosition('x', (mapWidth - 1) * areaSize)
-                            app.MatchTextures()
-                            snakeCords[1] = mapWidth - 1
-                        }
-                        else if (app.isBodyHittedByHead('left')) app.endGame()
-                        else if (typeof gameMapScheme[snakeCords[0]][snakeCords[1] - 1] === 'number') {
-                            if (arrayOfMapAreas[snakeCords[0]][snakeCords[1] - 1]) app.collectPoint(snakeCords[0], snakeCords[1] - 1, 'left')
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeMove('x', -areaSize)
-                            app.MatchTextures()
-                            snakeCords[1] -= 1
-                        } else {
-                            app.endGame()
-                        }
-                    } else if (currentDestiantion === 'right') {
-                        snakeBody[0].rotateHead('right')
-                        if (gameMapScheme[snakeCords[0]][snakeCords[1] + 1] === undefined) {
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeSetPosition('x', 0)
-                            app.MatchTextures()
-                            snakeCords[1] = 0
-                        }
-                        else if (app.isBodyHittedByHead('right')) app.endGame()
-                        else if (typeof gameMapScheme[snakeCords[0]][snakeCords[1] + 1] === 'number') {
-                            if (arrayOfMapAreas[snakeCords[0]][snakeCords[1] + 1]) app.collectPoint(snakeCords[0], snakeCords[1] + 1, 'right')
-                            app.moveAllSnakeBody()
-                            snakeBody[0].snakeMove('x', areaSize)
-                            app.MatchTextures()
-                            snakeCords[1] += 1
-                        } else {
-                            app.endGame()
-                        }
+                if (currentDestiantion === 'top') {
+                    snakeBody[0].rotateHead('top')
+                    if (app.isBodyHittedByHead('top')) app.endGame()
+                    else if (!gameMapScheme[snakeCords[0] - 1]) {
+                        //walking through the wall
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeSetPosition('y', (mapHeight - 1) * areaSize)
+                        app.MatchTextures()
+                        snakeCords[0] = mapHeight - 1
                     }
+                    else if (typeof gameMapScheme[snakeCords[0] - 1][snakeCords[1]] === 'number') {
+                        //normal walking
+                        if (arrayOfMapAreas[snakeCords[0] - 1][snakeCords[1]] === 1) app.collectPoint(snakeCords[0] - 1, snakeCords[1], 'top')
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeMove('y', -areaSize)
+                        app.MatchTextures()
+                        snakeCords[0] -= 1
+                    } else {
+                        app.endGame()
+                    }
+                } else if (currentDestiantion === 'bottom') {
+                    snakeBody[0].rotateHead('bottom')
+                    if (app.isBodyHittedByHead('bottom')) app.endGame()
+                    else if (!gameMapScheme[snakeCords[0] + 1]) {
+                        //walking through the wall
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeSetPosition('y', 0)
+                        app.MatchTextures()
+                        snakeCords[0] = 0
+                    }
+                    else if (typeof gameMapScheme[snakeCords[0] + 1][snakeCords[1]] === 'number') {
+                        //normal walking
+                        if (arrayOfMapAreas[snakeCords[0] + 1][snakeCords[1]]) app.collectPoint(snakeCords[0] + 1, snakeCords[1], 'bottom')
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeMove('y', areaSize)
+                        app.MatchTextures()
+                        snakeCords[0] += 1
+                    } else {
+                        app.endGame()
+                    }
+                } else if (currentDestiantion === 'left') {
+                    snakeBody[0].rotateHead('left')
+                    if (gameMapScheme[snakeCords[0]][snakeCords[1] - 1] === undefined) {
+                        //walking through the wall
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeSetPosition('x', (mapWidth - 1) * areaSize)
+                        app.MatchTextures()
+                        snakeCords[1] = mapWidth - 1
+                    }
+                    else if (app.isBodyHittedByHead('left')) app.endGame()
+                    else if (typeof gameMapScheme[snakeCords[0]][snakeCords[1] - 1] === 'number') {
+                        //normal walking
+                        if (arrayOfMapAreas[snakeCords[0]][snakeCords[1] - 1]) app.collectPoint(snakeCords[0], snakeCords[1] - 1, 'left')
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeMove('x', -areaSize)
+                        app.MatchTextures()
+                        snakeCords[1] -= 1
+                    } else {
+                        app.endGame()
+                    }
+                } else if (currentDestiantion === 'right') {
+                    snakeBody[0].rotateHead('right')
+                    if (gameMapScheme[snakeCords[0]][snakeCords[1] + 1] === undefined) {
+                        //walking through the wall
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeSetPosition('x', 0)
+                        app.MatchTextures()
+                        snakeCords[1] = 0
+                    }
+                    else if (app.isBodyHittedByHead('right')) app.endGame()
+                    else if (typeof gameMapScheme[snakeCords[0]][snakeCords[1] + 1] === 'number') {
+                        //normal walking
+                        if (arrayOfMapAreas[snakeCords[0]][snakeCords[1] + 1]) app.collectPoint(snakeCords[0], snakeCords[1] + 1, 'right')
+                        app.moveAllSnakeBody()
+                        snakeBody[0].snakeMove('x', areaSize)
+                        app.MatchTextures()
+                        snakeCords[1] += 1
+                    } else {
+                        app.endGame()
+                    }
+                }
                 pressAccess = true
-            }, 250)
-        ), 250)
+            }, lengthOfSnakeInterval)
+        ), lengthOfSnakeInterval)
     },
-
     renderSnake: () => {
         const snake = new Snake(snakeCords[1] * areaSize, snakeCords[0] * areaSize, 'head', 'bottom')
         gameMap.appendChild(snake.body)
@@ -202,7 +247,6 @@ const app = {
                 pressAccess = false
             }
         })
-        // document.addEventListener('keyup', e => pressAccess = true)
     },
     moveAllSnakeBody: () => {
         for (let itemIndex = 0; itemIndex < snakeBody.length - 1; itemIndex++) {
@@ -225,16 +269,8 @@ const app = {
     },
     MatchTextures: () => {
         snakeBody.forEach((bodyElement, i) => {
-            if (i !== 0) {
-                bodyElement.matchBodyImage(snakeBody[i - 1], snakeBody[i],snakeBody[i + 1])
-            }
+            if (i !== 0) bodyElement.matchBodyImage(snakeBody[i - 1], snakeBody[i],snakeBody[i + 1])
         })
-    },
-    endGame: () => {
-        clearTimeout(snakeTimeOut)
-        clearInterval(snakeInterval)
-        backgroundMusic.pause()
-        alert('You lose!')
     },
     renderPoint: (type: string) => {
         let loop = true
@@ -254,17 +290,7 @@ const app = {
         }
     },
     collectPoint: (y: number, x: number, direction: string) => {
-        let isExtra = arrayOfMapAreas[y][x] === 2
-        pointCollectingSound.play()
-        points += 1
-        let pointsDOM
-        if (!isExtra) pointsDOM = document.querySelector('.point')
-        else pointsDOM = document.querySelector('.extra_point')
-        arrayOfMapAreas[y][x] = 0
-        pointsDOM.remove()
-
         let snakeBodyItem: Snake
-
         if (direction === 'top') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x, snakeBody[snakeBody.length - 1].y + 20, 'ass', snakeBody[snakeBody.length - 1].direction)
         else if (direction === 'bottom') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x, snakeBody[snakeBody.length - 1].y - 20, 'ass', snakeBody[snakeBody.length - 1].direction)
         else if (direction === 'left') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x + 20, snakeBody[snakeBody.length - 1].y, 'ass', snakeBody[snakeBody.length - 1].direction)
@@ -274,28 +300,72 @@ const app = {
         snakeBody.push(snakeBodyItem)
         gameMap.appendChild(snakeBodyItem.body)
 
-        if (!isExtra) app.renderPoint('point')
-    }
-}
+        let isExtra = arrayOfMapAreas[y][x] === 2
+        let pointsDOM
 
-app.audio()
-
-//keys
-document.addEventListener('keydown', e => {
-    if (e.keyCode === 16) {
-        if (isLevelSelected) app.startTheGame()
-        else app.startMapsChoosingMenu()
-    }
-    if (e.keyCode === 83) {
-        if (!backgroundMusicPermission) backgroundMusic.play(), backgroundMusicPermission = true
-        else if (isSoundEnabled) {
-            isSoundEnabled = false
-            pointCollectingSound.muted = false
-            backgroundMusic.muted = false
+        if (isExtra) {
+            points += 60
+            pointCollectingSound.play()
+            pointsDOM = document.querySelector('.extra_point')
+            canSpawnExtraPoint = true
         } else {
-            isSoundEnabled = true
-            pointCollectingSound.muted = true
-            backgroundMusic.muted = true
+            points += 10
+            pointCollectingSound.play()
+            pointsDOM = document.querySelector('.point')
         }
-    }
-})
+
+        arrayOfMapAreas[y][x] = 0
+        pointsDOM.remove()
+
+        if (!isExtra) app.renderPoint('point')
+        document.querySelector('#points-number').innerHTML = points.toString()
+    },
+    extraPointsSpawning: () => {
+        setTimeout(() => {
+            extraPointInterval = setInterval(() => {
+                if (canSpawnExtraPoint) app.renderPoint('extra_point'), canSpawnExtraPoint = false
+            }, 1000 * 30)
+        },  Math.floor(Math.random() * 11) * 1000)
+    },
+    endGame: () => {
+        document.querySelector('#end-holder').innerHTML = '<video id="end-screen" playsinline autoplay muted loop><source src="../assets/video/end.mp4" type="video/mp4">Your browser does not support the video tag.</video>'
+        informationParagraph.innerHTML = '~~~ GAME OVER ~~~'
+        clearTimeout(snakeTimeOut)
+        clearInterval(snakeInterval)
+        clearInterval(extraPointInterval)
+        backgroundMusic.pause()
+        endSound.play()
+    },
+    setGlobalHotKeys: () => {
+        //keys
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 16) {
+                //shift
+                if (decisionsStep === 1) app.startMapsChoosingMenu()
+                else if (decisionsStep === 2) app.startTheGame()
+            }
+            if (e.keyCode === 83) {
+                //s
+                if (!backgroundMusicPermission) backgroundMusic.play(), backgroundMusicPermission = true
+                else if (isSoundEnabled) {
+                    isSoundEnabled = false
+                    pointCollectingSound.muted = false
+                    backgroundMusic.muted = false
+                } else {
+                    isSoundEnabled = true
+                    pointCollectingSound.muted = true
+                    backgroundMusic.muted = true
+                }
+            }
+            if (e.keyCode === 67) {
+                //c
+                if (colorSchemeCounter === 0) gameMap.style.filter = 'hue-rotate(90deg) grayscale(0%)', colorSchemeCounter++
+                else if (colorSchemeCounter === 1) gameMap.style.filter = 'hue-rotate(180deg) grayscale(0%)', colorSchemeCounter++
+                else if (colorSchemeCounter === 2) gameMap.style.filter = 'hue-rotate(270deg) grayscale(0%)', colorSchemeCounter++
+                else if (colorSchemeCounter === 3) gameMap.style.filter = 'hue-rotate(0deg) grayscale(0%)', colorSchemeCounter++
+                else if (colorSchemeCounter === 4) gameMap.style.filter = 'hue-rotate(0deg) grayscale(100%)', colorSchemeCounter = 0
+            }
+        })
+    },
+}
+app.onLoad()

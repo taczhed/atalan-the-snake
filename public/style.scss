@@ -10,16 +10,44 @@ body {
   background-color: #3a0e00;
   font-family: "Press Start 2P";
   color: rgb(191, 144, 94);
+
+  video#end-screen {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 0;
+  }
+
+  p {
+    background-color: #3a0e00;
+    z-index: 1;
+  }
+
   div#app {
     width: 720px;
     height: 440px;
     background-color: rgba(1, 47, 0);
     position: relative;
+    z-index: 1;
+
+    div#author{
+      width: 358px;
+      height: 110px;
+      padding: 16px;
+      position: absolute;
+      top: 142px;
+      left: 166px;
+      background-color: #6c400d;
+      line-height: 20px;
+    }
+
     div.area {
       position: absolute;
       width: 20px;
       height: 20px;
     }
+
     div#game-maps {
       position: absolute;
       bottom: 120px;
@@ -29,15 +57,18 @@ body {
       flex-direction: row;
       align-items: center;
       justify-content: center;
+
       div.game-maps-item {
         position: relative;
         margin: 12px;
         height: 110px;
         width: 128px;
+
         &:nth-of-type(2) {
           width: 144px;
         }
       }
+
       div.game-maps-picker {
         position: absolute;
         padding: 12px;
@@ -48,5 +79,23 @@ body {
         background-color: rgba(255, 115, 0, 0.4);
       }
     }
+  }
+  .information-text {
+    animation: information-text-animation 5s infinite;
+  }
+}
+
+@keyframes information-text-animation {
+  0%{
+    opacity: 0;
+  }
+  10%{
+    opacity: 1;
+  }
+  90%{
+    opacity: 1;
+  }
+  100%{
+    opacity: 0;
   }
 }
