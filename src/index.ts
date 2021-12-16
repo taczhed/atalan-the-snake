@@ -71,7 +71,16 @@ const app = {
         backgroundMusic.play()
         app.renderMapOfTheGame()
         app.renderSnake()
-        app.renderPoint()
+        app.renderPoint('point')
+        app.randomExtraPointsSpawning()
+    },
+    randomExtraPointsSpawning: () => {
+        setTimeout(() => {
+            setInterval(() => {
+                app.renderPoint('extra_point')
+                console.log("spawn!")
+            }, 1000 * 30)
+        },  Math.floor(Math.random() * 11) * 1000)
     },
     renderMapOfTheGame: () => {
         let y = 0
@@ -88,7 +97,6 @@ const app = {
             y += areaSize
         })
     },
-
     setSnakeInterval: (): void => {
         snakeTimeOut = setTimeout(() => (
             snakeInterval = setInterval(() => {
@@ -228,7 +236,7 @@ const app = {
         backgroundMusic.pause()
         alert('You lose!')
     },
-    renderPoint: () => {
+    renderPoint: (type: string) => {
         let loop = true
         while (loop === true) {
             const x = Math.floor(Math.random() * (mapWidth - 1))
@@ -238,18 +246,21 @@ const app = {
                 if (bodyItem.x === x * areaSize || bodyItem.y === y * areaSize) areCoordsFreeForPoint = false
             })
             if (!arrayOfMapAreas[y][x] && areCoordsFreeForPoint) {
-                const point = new Point(x * areaSize, y * areaSize, 'point')
-                arrayOfMapAreas[y][x] = 1
+                const point = new Point(x * areaSize, y * areaSize, type)
+                arrayOfMapAreas[y][x] = type === 'point' ? 1 : 2
                 gameMap.appendChild(point.body)
                 loop = false
             }
         }
     },
     collectPoint: (y: number, x: number, direction: string) => {
+        let isExtra = arrayOfMapAreas[y][x] === 2
         pointCollectingSound.play()
         points += 1
+        let pointsDOM
+        if (!isExtra) pointsDOM = document.querySelector('.point')
+        else pointsDOM = document.querySelector('.extra_point')
         arrayOfMapAreas[y][x] = 0
-        const pointsDOM = document.querySelector('.point')
         pointsDOM.remove()
 
         let snakeBodyItem: Snake
@@ -263,7 +274,7 @@ const app = {
         snakeBody.push(snakeBodyItem)
         gameMap.appendChild(snakeBodyItem.body)
 
-        app.renderPoint()
+        if (!isExtra) app.renderPoint('point')
     }
 }
 

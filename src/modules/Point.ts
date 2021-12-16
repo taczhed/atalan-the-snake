@@ -4,8 +4,8 @@ class Point extends Area {
 
     constructor(x: number, y: number, type: string) {
         super(x, y, type)
-        this.body.setAttribute('src' , '../../assets/textures/point.png')
-        this.body.classList.add('point')
+        this.body.setAttribute('src' , `../../assets/textures/${type}.png`)
+        this.body.classList.add(type)
     }
 }
 
