@@ -15,6 +15,16 @@ class Snake extends Area {
         this.body.style.top = `${this.y}px`
     }
 
+    snakeSetPosition = (way: string, value: number) => {
+        if (way === 'x') {
+            this.x = value
+            this.body.style.left = `${this.x}px`
+        } else if (way === 'y') {
+            this.y = value
+            this.body.style.top = `${this.y}px`
+        }
+    }
+
     snakeMove = (way: string, px: number): void => {
         if (way === 'x') {
             this.x = this.x + px

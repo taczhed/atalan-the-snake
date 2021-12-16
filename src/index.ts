@@ -92,48 +92,80 @@ const app = {
     setSnakeInterval: (): void => {
         snakeTimeOut = setTimeout(() => (
             snakeInterval = setInterval(() => {
-                    if (currentDestiantion === 'top' && typeof gameMapScheme[snakeCords[0] - 1][snakeCords[1]] === 'number') {
+                    if (currentDestiantion === 'top') {
                         snakeBody[0].rotateHead('top')
                         if (app.isBodyHittedByHead('top')) app.endGame()
-                        else {
+                        else if (!gameMapScheme[snakeCords[0] - 1]) {
+                            //wall chasing
+                            app.moveAllSnakeBody()
+                            snakeBody[0].snakeSetPosition('y', (mapHeight - 1) * areaSize)
+                            app.MatchTextures()
+                            snakeCords[0] = mapHeight - 1
+                        }
+                        else if (typeof gameMapScheme[snakeCords[0] - 1][snakeCords[1]] === 'number') {
                             if (arrayOfMapAreas[snakeCords[0] - 1][snakeCords[1]] === 1) app.collectPoint(snakeCords[0] - 1, snakeCords[1], 'top')
                             app.moveAllSnakeBody()
                             snakeBody[0].snakeMove('y', -areaSize)
                             app.MatchTextures()
                             snakeCords[0] -= 1
+                        } else {
+                            app.endGame()
                         }
-                    } else if (currentDestiantion === 'bottom' && typeof gameMapScheme[snakeCords[0] + 1][snakeCords[1]] === 'number') {
+                    } else if (currentDestiantion === 'bottom') {
                         snakeBody[0].rotateHead('bottom')
                         if (app.isBodyHittedByHead('bottom')) app.endGame()
-                        else {
+                        else if (!gameMapScheme[snakeCords[0] + 1]) {
+                            //wall chasing
+                            app.moveAllSnakeBody()
+                            snakeBody[0].snakeSetPosition('y', 0)
+                            app.MatchTextures()
+                            snakeCords[0] = 0
+                        }
+                        else if (typeof gameMapScheme[snakeCords[0] + 1][snakeCords[1]] === 'number') {
                             if (arrayOfMapAreas[snakeCords[0] + 1][snakeCords[1]]) app.collectPoint(snakeCords[0] + 1, snakeCords[1], 'bottom')
                             app.moveAllSnakeBody()
                             snakeBody[0].snakeMove('y', areaSize)
                             app.MatchTextures()
                             snakeCords[0] += 1
+                        } else {
+                            app.endGame()
                         }
-                    } else if (currentDestiantion === 'left' && typeof gameMapScheme[snakeCords[0]][snakeCords[1] - 1] === 'number') {
+                    } else if (currentDestiantion === 'left') {
                         snakeBody[0].rotateHead('left')
-                        if (app.isBodyHittedByHead('left')) app.endGame()
-                        else {
+                        if (gameMapScheme[snakeCords[0]][snakeCords[1] - 1] === undefined) {
+                            app.moveAllSnakeBody()
+                            snakeBody[0].snakeSetPosition('x', (mapWidth - 1) * areaSize)
+                            app.MatchTextures()
+                            snakeCords[1] = mapWidth - 1
+                        }
+                        else if (app.isBodyHittedByHead('left')) app.endGame()
+                        else if (typeof gameMapScheme[snakeCords[0]][snakeCords[1] - 1] === 'number') {
                             if (arrayOfMapAreas[snakeCords[0]][snakeCords[1] - 1]) app.collectPoint(snakeCords[0], snakeCords[1] - 1, 'left')
                             app.moveAllSnakeBody()
                             snakeBody[0].snakeMove('x', -areaSize)
                             app.MatchTextures()
                             snakeCords[1] -= 1
+                        } else {
+                            app.endGame()
                         }
-                    } else if (currentDestiantion === 'right' && typeof gameMapScheme[snakeCords[0]][snakeCords[1] + 1] === 'number') {
+                    } else if (currentDestiantion === 'right') {
                         snakeBody[0].rotateHead('right')
-                        if (app.isBodyHittedByHead('right')) app.endGame()
-                        else {
+                        if (gameMapScheme[snakeCords[0]][snakeCords[1] + 1] === undefined) {
+                            app.moveAllSnakeBody()
+                            snakeBody[0].snakeSetPosition('x', 0)
+                            app.MatchTextures()
+                            snakeCords[1] = 0
+                        }
+                        else if (app.isBodyHittedByHead('right')) app.endGame()
+                        else if (typeof gameMapScheme[snakeCords[0]][snakeCords[1] + 1] === 'number') {
                             if (arrayOfMapAreas[snakeCords[0]][snakeCords[1] + 1]) app.collectPoint(snakeCords[0], snakeCords[1] + 1, 'right')
                             app.moveAllSnakeBody()
                             snakeBody[0].snakeMove('x', areaSize)
                             app.MatchTextures()
                             snakeCords[1] += 1
+                        } else {
+                            app.endGame()
                         }
-                    } else {
-                        app.endGame()
                     }
                 pressAccess = true
             }, 250)
@@ -175,10 +207,10 @@ const app = {
         let isHitted = false
         snakeBody.forEach((bodyElement, i) => {
             if (i !== 0) {
-                if (destination === 'top' && bodyElement.y - snakeBody[0].y === -areaSize && bodyElement.x === snakeBody[0].x) isHitted = true, console.log("tutej!")
-                else if (destination === 'bottom' && bodyElement.y - snakeBody[0].y === areaSize && bodyElement.x === snakeBody[0].x) isHitted = true, console.log("tutej!")
-                else if (destination === 'left' && bodyElement.x - snakeBody[0].x === -areaSize && bodyElement.y === snakeBody[0].y) isHitted = true, console.log("tutej!")
-                else if (destination === 'right' && bodyElement.x - snakeBody[0].x === areaSize && bodyElement.y === snakeBody[0].y) isHitted = true, console.log("tutej!")
+                if (destination === 'top' && bodyElement.y - snakeBody[0].y === -areaSize && bodyElement.x === snakeBody[0].x) isHitted = true
+                else if (destination === 'bottom' && bodyElement.y - snakeBody[0].y === areaSize && bodyElement.x === snakeBody[0].x) isHitted = true
+                else if (destination === 'left' && bodyElement.x - snakeBody[0].x === -areaSize && bodyElement.y === snakeBody[0].y) isHitted = true
+                else if (destination === 'right' && bodyElement.x - snakeBody[0].x === areaSize && bodyElement.y === snakeBody[0].y) isHitted = true
             }
         })
         return isHitted
@@ -216,7 +248,6 @@ const app = {
     collectPoint: (y: number, x: number, direction: string) => {
         pointCollectingSound.play()
         points += 1
-        console.log(points)
         arrayOfMapAreas[y][x] = 0
         const pointsDOM = document.querySelector('.point')
         pointsDOM.remove()
