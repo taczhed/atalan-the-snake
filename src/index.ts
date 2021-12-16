@@ -152,7 +152,7 @@ const app = {
                     }
                     else if (typeof gameMapScheme[snakeCords[0] - 1][snakeCords[1]] === 'number') {
                         //normal walking
-                        if (arrayOfMapAreas[snakeCords[0] - 1][snakeCords[1]] === 1) app.collectPoint(snakeCords[0] - 1, snakeCords[1], 'top')
+                        if (arrayOfMapAreas[snakeCords[0] - 1][snakeCords[1]]) app.collectPoint(snakeCords[0] - 1, snakeCords[1], 'top')
                         app.moveAllSnakeBody()
                         snakeBody[0].snakeMove('y', -areaSize)
                         app.MatchTextures()
@@ -290,16 +290,6 @@ const app = {
         }
     },
     collectPoint: (y: number, x: number, direction: string) => {
-        let snakeBodyItem: Snake
-        if (direction === 'top') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x, snakeBody[snakeBody.length - 1].y + 20, 'ass', snakeBody[snakeBody.length - 1].direction)
-        else if (direction === 'bottom') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x, snakeBody[snakeBody.length - 1].y - 20, 'ass', snakeBody[snakeBody.length - 1].direction)
-        else if (direction === 'left') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x + 20, snakeBody[snakeBody.length - 1].y, 'ass', snakeBody[snakeBody.length - 1].direction)
-        else if (direction === 'right') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x - 20, snakeBody[snakeBody.length - 1].y, 'ass', snakeBody[snakeBody.length - 1].direction)
-
-        snakeBody[snakeBody.length - 1].changeBodyType('ass', 'body', snakeBody[snakeBody.length - 1].direction)
-        snakeBody.push(snakeBodyItem)
-        gameMap.appendChild(snakeBodyItem.body)
-
         let isExtra = arrayOfMapAreas[y][x] === 2
         let pointsDOM
 
@@ -312,6 +302,16 @@ const app = {
             points += 10
             pointCollectingSound.play()
             pointsDOM = document.querySelector('.point')
+
+            let snakeBodyItem: Snake
+            if (direction === 'top') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x, snakeBody[snakeBody.length - 1].y + 20, 'ass', snakeBody[snakeBody.length - 1].direction)
+            else if (direction === 'bottom') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x, snakeBody[snakeBody.length - 1].y - 20, 'ass', snakeBody[snakeBody.length - 1].direction)
+            else if (direction === 'left') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x + 20, snakeBody[snakeBody.length - 1].y, 'ass', snakeBody[snakeBody.length - 1].direction)
+            else if (direction === 'right') snakeBodyItem = new Snake(snakeBody[snakeBody.length - 1].x - 20, snakeBody[snakeBody.length - 1].y, 'ass', snakeBody[snakeBody.length - 1].direction)
+
+            snakeBody[snakeBody.length - 1].changeBodyType('ass', 'body', snakeBody[snakeBody.length - 1].direction)
+            snakeBody.push(snakeBodyItem)
+            gameMap.appendChild(snakeBodyItem.body)
         }
 
         arrayOfMapAreas[y][x] = 0
@@ -324,7 +324,7 @@ const app = {
         setTimeout(() => {
             extraPointInterval = setInterval(() => {
                 if (canSpawnExtraPoint) app.renderPoint('extra_point'), canSpawnExtraPoint = false
-            }, 1000 * 30)
+            }, 1000 * 45)
         },  Math.floor(Math.random() * 11) * 1000)
     },
     endGame: () => {
